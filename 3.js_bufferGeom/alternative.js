@@ -6,8 +6,14 @@ camera.position.z = 1250;
 var d = 4,
 camera.position.z = 1250;
 
+/*
 
 
+*/
+options = {
+  wave_frequency : 1000,
+  d: 2,
+}
 // first view -- full viewport particle
 function render(){
   amplitude.smooth(0.91);
@@ -17,7 +23,7 @@ function render(){
   var randomNumber = Math.floor(Math.random() * 1) - 0.5;
 
    time = Date.now() * 0.001;
-  camera.position.z = 1000 + level*3000 *randomNumber
+  camera.position.z = options.wave_frequency + level*3000 *randomNumber
   // camera.position.z = Math.sin(time)
   // mesh.rotation.x = level*10+ time;
   mesh.rotation.y = time * .5 + level;
