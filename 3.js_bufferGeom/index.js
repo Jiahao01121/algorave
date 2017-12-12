@@ -32,7 +32,7 @@ function init(json){
   //
 
   camera = new THREE.PerspectiveCamera(27, window.innerWidth/window.innerHeight, 1, 350000);
-  camera.position.z = 2750;
+  camera.position.z = 2250;
 
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog( 0x050505, 2000, 350000 );
@@ -65,7 +65,7 @@ function init(json){
 
 
 	var n = 800, n2 = n/2;	// triangles spread in the cube
-	var d = 4, d2 = d/2;	// individual triangle size
+	var d = 2, d2 = d/2;	// individual triangle size
 
   var pA = new THREE.Vector3();
   var pB = new THREE.Vector3();
@@ -93,18 +93,18 @@ function init(json){
       // console.log(Math.random() * n - n2);
       Math.random() * n - n2;
 
-      var ax = x + Math.random() * d - d2;
+      var ax = x + Math.random() * (d* 2*Math.random()) - d2;
       var ay = y + Math.random() * d - d2;
       var az = z + Math.random() * d - d2;
 
 
       var bx = x + Math.random() * d - d2;
-      var by = y + Math.random() * d - d2;
+      var by = y + Math.random() * (d* 2*Math.random()) - d2;
       var bz = z + Math.random() * d - d2;
 
       var cx = x + Math.random() * d - d2;
-			var cy = y + Math.random() * d - d2;
-		  var cz = z + Math.random() * d - d2;
+			var cy = y + Math.random() * (d* 2*Math.random()) - d2;
+		  var cz = z + Math.random() * (d* 2*Math.random()) - d2;
 
       positions[i] = ax;
       positions[i + 1] = ay;
@@ -240,7 +240,7 @@ function render(){
   var randomNumber = Math.floor(Math.random() * 1) - 0.5;
 
    time = Date.now() * 0.001;
-  camera.position.z = 2300 + level*3000 *randomNumber
+  camera.position.z = 1000 + level*3000 *randomNumber
   // camera.position.z = Math.sin(time)
   // mesh.rotation.x = level*10+ time;
   mesh.rotation.y = time * .5 + level;
