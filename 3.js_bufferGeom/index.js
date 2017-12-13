@@ -1,32 +1,76 @@
 options = {
-    d : 2,
   //amplitude sooth
     smooth: 0.91,
-  //camera z distance
+// global intense rate
+    time_factor : 0.0005,
+//camera z distance
     z : 1300,
     z_bounceRate : 300,
     z_bounceRateGlitch : true,
-  // global intense rate
-    time_factor : 0.0005,
-  // y intence rate
+//camera y intence rate
     y_factor : 10,
-    particle_num : 129095,
-    tween : function(target, start_v, end_v, time, easeFc){
+//particle regenerate
+    particle_size : 4,
+    particle_num : 20950,
+    particle_global_color_r : 0.5,
+    particle_global_color_g : 0.5,
+    particle_global_color_b : 0.5,
+    particle_material_color : 0xaaaaaa,
+    particle_material_specular : 0x000000,
+
+    tween : function(target, start_v, end_v, time, easeFc_index){
         var diff = end_v - start_v;
         timer_zoom = d3.timer((e) =>{
-            var ease = Math.min(1,d3[easeFc](e/time,4));
+            var easeFc = ['easePolyIn','easeLinear','easeElastic'];
+            var ease = Math.min(1,d3[easeFc[easeFc_index]](e/time,4));
             this[target] = start_v +(diff * ease);
-            console.log(this[target]);
 
             if(target === 'particle_num'){
-              this.rerun(Math.floor(this[target]),this.d);
+              this.rerun(Math.floor(this[target]),this.particle_size);
             }
+
+            if(target === 'particle_size'){
+              this.rerun(undefined,Math.floor(this[target]));
+            }
+
+            if(target === 'particle_global_color_r'){
+              this.rerun(undefined,undefined,Math.floor(this[target]));
+            }
+
+            if(target === 'particle_global_color_g'){
+              this.rerun(undefined,undefined,undefined,Math.floor(this[target]));
+            }
+
+            if(target === 'particle_global_color_b'){
+              this.rerun(undefined,undefined,undefined,undefined,Math.floor(this[target]));
+            }
+
+
+            if(target === 'particle_material_color'){
+              var color_temp_s_r = hexToRGB(start_v)[0];
+              var color_temp_e_r = hexToRGB(end_v)[0];
+              var color_temp_s_g = hexToRGB(start_v)[1];
+              var color_temp_e_g = hexToRGB(end_v)[1];
+              var color_temp_s_b = hexToRGB(start_v)[2];
+              var color_temp_e_b = hexToRGB(end_v)[2];
+              var diff_r = color_temp_e_r - color_temp_s_r;
+              var diff_g = color_temp_e_g - color_temp_s_g;
+              var diff_b = color_temp_e_b - color_temp_s_b;
+              var returned = "#" + RGBToHex(
+                Math.floor(color_temp_s_r +(diff_r * ease)),
+                Math.floor(color_temp_s_g +(diff_g * ease)),
+                Math.floor(color_temp_s_b +(diff_b * ease)));
+              this.rerun(undefined,undefined,undefined,undefined,undefined,new THREE.Color(returned));
+            }
+
+
             if(ease == 1){
               timer_zoom.stop();
+              console.log(" -->tween complete");
             }
         })
     },
-    rerun : function(particle_num,particle_size){
+    rerun : function(particle_num,particle_size,particle_global_color_r,particle_global_color_g,particle_global_color_b,particle_material_color){
         //reevaluate mesh
         mesh = null;
         var triangles = particle_num? particle_num : this.particle_num; // 29095
@@ -40,7 +84,7 @@ options = {
 
         var color = new THREE.Color();
 
-        var d_ = particle_size ? particle_size : options.d;
+        var d_ = particle_size ? particle_size : options.particle_size;
         var n = 800, n2 = n/2;	// triangles spread in the cube
         var d2 = d_/2;	// individual triangle size
 
@@ -112,9 +156,9 @@ options = {
 
             // colors
 
-            var vx = (x/n) +0.5;
-            var vy = (y/n) +0.5;
-            var vz = (z/n) +0.5;
+            var vx = (x/n) + (particle_global_color_r ? particle_global_color_r : this.particle_global_color_r);
+            var vy = (y/n) + (particle_global_color_g ? particle_global_color_g : this.particle_global_color_g);
+            var vz = (z/n) + (particle_global_color_b ? particle_global_color_b : this.particle_global_color_b);
 
             color.setRGB( vx, vy, vz );
 
@@ -140,8 +184,8 @@ options = {
         geometry.computeBoundingSphere();
 
         var material = new THREE.MeshPhongMaterial( {
-          color: 0xaaaaaa,
-          specular: 0x000000,
+          color: (particle_material_color ? particle_material_color : this.particle_material_color),
+          specular: this.particle_material_specular,
           shininess: 250,
           side: THREE.DoubleSide,
           vertexColors: THREE.VertexColors
@@ -163,6 +207,21 @@ options = {
 
 
 }//options
+
+
+
+var hexToRGB = function(hex){
+    var r = hex >> 16;
+    var g = hex >> 8 & 0xFF;
+    var b = hex & 0xFF;
+    return [r,g,b];
+}
+var RGBToHex = function(r,g,b){
+    var bin = r << 16 | g << 8 | b;
+    return (function(h){
+        return new Array(7-h.length).join("0")+h
+    })(bin.toString(16).toUpperCase())
+}
 
 if(! Detector.webgl) Detector.addGetWebGLMessage();
 var container, stats;
@@ -213,7 +272,7 @@ function init(){
 
 
 
-    var triangles =  290950;
+    var triangles =  20950;
     // 360000;
 
 
@@ -227,7 +286,7 @@ function init(){
 
 
     var n = 800, n2 = n/2;	// triangles spread in the cube
-    var d2 = options.d/2;	// individual triangle size
+    var d2 = options.particle_size/2;	// individual triangle size
 
     var pA = new THREE.Vector3();
     var pB = new THREE.Vector3();
@@ -245,18 +304,18 @@ function init(){
         var y = Math.random() * n - n2;
         var z = Math.random() * n - n2;
 
-        var ax = x + Math.random() * (options.d* 2*Math.random()) - d2;
-        var ay = y + Math.random() * options.d - d2;
-        var az = z + Math.random() * options.d - d2;
+        var ax = x + Math.random() * (options.particle_size* 2*Math.random()) - d2;
+        var ay = y + Math.random() * options.particle_size - d2;
+        var az = z + Math.random() * options.particle_size - d2;
 
 
-        var bx = x + Math.random() * options.d - d2;
-        var by = y + Math.random() * (options.d* 2*Math.random()) - d2;
-        var bz = z + Math.random() * options.d - d2;
+        var bx = x + Math.random() * options.particle_size - d2;
+        var by = y + Math.random() * (options.particle_size* 2*Math.random()) - d2;
+        var bz = z + Math.random() * options.particle_size - d2;
 
-        var cx = x + Math.random() * options.d - d2;
-        var cy = y + Math.random() * (options.d* 2*Math.random()) - d2;
-        var cz = z + Math.random() * (options.d* 2*Math.random()) - d2;
+        var cx = x + Math.random() * options.particle_size - d2;
+        var cy = y + Math.random() * (options.particle_size* 2*Math.random()) - d2;
+        var cz = z + Math.random() * (options.particle_size* 2*Math.random()) - d2;
 
         positions[i] = ax;
         positions[i + 1] = ay;
@@ -336,10 +395,6 @@ function init(){
     previous_uuid = mesh.uuid;
 
     scene.add( mesh );
-    // scene.remove(scene.children[scene.children.length -1])
-
-
-
     renderer = new THREE.WebGLRenderer( { antialias: true } );
     renderer.setClearColor( scene.fog.color );
     renderer.setPixelRatio( window.devicePixelRatio );
@@ -348,12 +403,9 @@ function init(){
     renderer.gamaOutput = true;
     container.appendChild( renderer.domElement );
     window.addEventListener('resize', onWindowResize, false);
-
-
-
-  //add controls
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.target = new THREE.Vector3(0,100,0)
+    //add controls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target = new THREE.Vector3(0,100,0)
 
 } //init
 
@@ -369,8 +421,6 @@ function animate(){
   render();
   controls.update();
 }
-
-
 
 function render(){
   var level = amplitude.getLevel();
